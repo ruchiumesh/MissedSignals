@@ -1,0 +1,481 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MissedSignals — Signal Detective</title>
+<style>
+:root{
+  --bg:#101310;--panel:#191e19;--panel2:#202720;
+  --line:#343c32;--text:#f0f0df;--muted:#a0a998;
+  --lime:#d4ff65;--orange:#ffad70;--blue:#a6d5ff;
+  --red:#ff827c;--green:#a6e6b1;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+button,textarea,input{font:inherit}
+button{cursor:pointer}
+header{padding:19px 5%;display:flex;align-items:center;
+  justify-content:space-between;gap:15px;border-bottom:1px solid var(--line)}
+.logo{font-weight:900;letter-spacing:-1px;font-size:21px}
+.logo span{color:var(--lime)}
+.case{font-size:10px;letter-spacing:2px;color:var(--lime)}
+main{max-width:1200px;margin:auto;padding:30px 20px 65px}
+.hero{display:grid;grid-template-columns:1.4fr .6fr;gap:20px;
+  align-items:end;margin-bottom:28px}
+.kicker{font-size:11px;letter-spacing:2px;color:var(--lime);font-weight:800}
+h1{font-size:clamp(37px,6vw,67px);line-height:1.02;
+  letter-spacing:-3px;margin:15px 0}
+h1 em{font-style:normal;color:var(--lime)}
+.sub{color:var(--muted);line-height:1.8;max-width:600px;font-size:14px}
+.stamp{border:1px solid var(--line);padding:17px;border-radius:13px;
+  color:var(--muted);font-size:12px;line-height:2}
+.stamp strong{color:var(--lime);display:block;font-size:15px}
+.layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(270px,.8fr);
+  gap:18px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);
+  border-radius:15px;padding:20px;margin-bottom:17px;min-width:0}
+.panelhead{display:flex;justify-content:space-between;align-items:center;
+  gap:10px;margin-bottom:15px}
+.panelhead h2{font-size:14px;margin:0;letter-spacing:.2px}
+.num{font-size:10px;color:var(--lime);letter-spacing:1px}
+textarea{width:100%;min-height:225px;resize:vertical;background:#101510;
+  color:var(--text);border:1px solid var(--line);border-radius:9px;
+  padding:14px;line-height:1.8;font-size:13px}
+textarea:focus,input:focus{outline:1px solid var(--lime)}
+.row{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+.btn{padding:10px 13px;border-radius:8px;border:1px solid var(--line);
+  color:var(--text);background:var(--panel2);font-size:12px}
+.btn.main{background:var(--lime);color:#161b12;border-color:var(--lime);
+  font-weight:900}
+.btn:hover{filter:brightness(1.12)}
+.note{font-size:11px;color:var(--muted);line-height:1.7;margin-top:12px}
+.bigscore{font-size:49px;font-weight:900;letter-spacing:-3px;color:var(--lime)}
+.bigscore small{font-size:14px;letter-spacing:0;color:var(--muted)}
+.meter{height:5px;background:#30382e;border-radius:10px;margin:12px 0}
+.meter div{height:100%;width:0;background:var(--lime);border-radius:10px;
+  transition:width .3s}
+.muted{color:var(--muted);font-size:12px;line-height:1.7}
+.finding{padding:14px 0;border-bottom:1px solid var(--line)}
+.finding:last-child{border-bottom:0}
+.findtop{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tag{font-size:9px;font-weight:900;letter-spacing:1px;
+  border-radius:4px;padding:5px 7px;background:#2b3427;color:var(--lime)}
+.tag.CHANGE{background:#48352a;color:var(--orange)}
+.tag.GAP{background:#44302c;color:var(--red)}
+.tag.QUESTION{background:#253c4b;color:var(--blue)}
+.tag.TASK{background:#293b2b;color:var(--green)}
+.finding h3{font-size:14px;line-height:1.5;margin:10px 0 5px}
+.finding p{font-size:12px;color:var(--muted);line-height:1.7;margin:5px 0}
+.evidence{border-left:2px solid var(--line);padding:7px 10px;
+  margin-top:9px;font-size:11px;line-height:1.7;color:#c8d0bd}
+.evidence b{color:var(--lime);font-weight:600}
+.timeline{position:relative;padding-left:21px}
+.timeline:before{content:"";position:absolute;left:5px;top:8px;bottom:8px;
+  width:1px;background:var(--line)}
+.event{position:relative;padding:0 0 18px 9px}
+.event:before{content:"";position:absolute;left:-20px;top:5px;width:8px;
+  height:8px;border-radius:50%;background:var(--lime)}
+.event.change:before{background:var(--orange)}
+.event time{font-size:10px;color:var(--lime);letter-spacing:1px}
+.event p{font-size:12px;line-height:1.7;margin:6px 0;color:#e0e5d8}
+.event small{font-size:10px;color:var(--muted)}
+.todo{display:flex;align-items:flex-start;gap:10px;padding:12px 0;
+  border-bottom:1px solid var(--line)}
+.todo:last-child{border-bottom:0}
+.todo input{accent-color:var(--lime);margin-top:3px}
+.todo label{font-size:12px;line-height:1.7;flex:1;overflow-wrap:anywhere}
+.todo input:checked+label{text-decoration:line-through;color:var(--muted)}
+.todo small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.ask{display:flex;gap:8px;margin-top:12px}
+.ask input{width:100%;min-width:0;background:#101510;color:var(--text);
+  border:1px solid var(--line);padding:10px;border-radius:8px;font-size:12px}
+.chip{display:inline-block;padding:7px 9px;border:1px solid var(--line);
+  border-radius:7px;color:var(--blue);font-size:11px;margin:5px 5px 0 0;
+  cursor:pointer;background:transparent}
+.chip:hover{border-color:var(--blue)}
+.empty{font-size:12px;color:var(--muted);line-height:1.8;padding:12px 0}
+footer{text-align:center;color:var(--muted);font-size:10px;padding:25px}
+@media(max-width:780px){
+ .hero,.layout{grid-template-columns:1fr}
+ .stamp{max-width:none}
+ h1{letter-spacing:-2px}
+ main{padding:24px 13px 45px}
+ .panel{padding:15px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">missed<span>signals</span> /</div>
+  <div class="case">FIELD INTELLIGENCE TOOLKIT · 001</div>
+</header>
+
+<main>
+  <section class="hero">
+    <div>
+      <div class="kicker">CONVERSATION FORENSICS</div>
+      <h1>You were away.<br>Things <em>changed.</em></h1>
+      <p class="sub">Don't just catch up. Reconstruct the story.
+      Find the plan that changed, the question still hanging,
+      and the next move nobody clearly assigned.</p>
+    </div>
+    <div class="stamp">
+      <span>CASE STATUS</span>
+      <strong id="status">AWAITING EVIDENCE</strong>
+      <span>MODE: BROWSER-ONLY ANALYSIS</span><br>
+      <span id="caseid">CASE / MS-0001</span>
+    </div>
+  </section>
+
+  <div class="layout">
+    <section>
+      <div class="panel">
+        <div class="panelhead">
+          <h2>01 — COLLECT EVIDENCE</h2><span class="num">INPUT</span>
+        </div>
+        <textarea id="chat" placeholder="Paste messages here. One message per line works best.
+
+Example:
+09:00 Maya: We will present on Friday.
+09:10 Arjun: Can everyone finish the slides?
+09:30 Maya: Update — the presentation moved to Thursday.
+09:40 Sam: Who is uploading the final report?"></textarea>
+        <div class="row">
+          <button class="btn main" id="investigate">↗ Reconstruct conversation</button>
+          <button class="btn" id="load">Load mystery case</button>
+          <button class="btn" id="reset">Clear case</button>
+        </div>
+        <div class="note">LOCAL PROCESSING · No account or API key needed.
+        Paste only messages you're permitted to use. Detection is heuristic,
+        so confirm findings against the original conversation.</div>
+      </div>
+
+      <div class="panel">
+        <div class="panelhead">
+          <h2>02 — THE PLOT TWIST</h2><span class="num">CHANGES</span>
+        </div>
+        <div id="twist" class="empty">Waiting for evidence of a changed plan.</div>
+      </div>
+
+      <div class="panel">
+        <div class="panelhead">
+          <h2>03 — EVIDENCE BOARD</h2><span class="num" id="findingcount">0 FINDINGS</span>
+        </div>
+        <div id="findings" class="empty">Your findings will appear here, with the source message attached.</div>
+      </div>
+    </section>
+
+    <aside>
+      <div class="panel">
+        <div class="panelhead"><h2>CASE PRIORITY</h2><span class="num">01</span></div>
+        <div class="bigscore"><span id="score">—</span><small> / 100</small></div>
+        <div class="meter"><div id="bar"></div></div>
+        <div id="scoretext" class="muted">Investigate a conversation to estimate how much follow-up may be needed.</div>
+      </div>
+
+      <div class="panel">
+        <div class="panelhead"><h2>04 — STORY TIMELINE</h2><span class="num" id="eventcount">0 EVENTS</span></div>
+        <div id="timeline" class="empty">The conversation will be reconstructed in message order.</div>
+      </div>
+
+      <div class="panel">
+        <div class="panelhead"><h2>05 — YOUR COMEBACK PLAN</h2><span class="num">NEXT MOVES</span></div>
+        <div id="todos" class="empty">Your next steps will appear here.</div>
+        <div class="row">
+          <button class="btn" id="copy">Copy comeback plan</button>
+        </div>
+        <div id="copymsg" class="note"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panelhead"><h2>ASK THE GROUP</h2><span class="num">QUICK PROMPTS</span></div>
+        <div class="muted">Generate a question to resolve a possible gap.</div>
+        <div id="prompts" style="margin-top:9px">
+          <button class="chip" data-prompt="Who owns the next task?">Who owns the next task?</button>
+          <button class="chip" data-prompt="Can someone confirm the final deadline?">Confirm deadline</button>
+          <button class="chip" data-prompt="Has the final file been uploaded?">Check final file</button>
+        </div>
+        <div class="ask">
+          <input id="question" placeholder="Write a question...">
+          <button class="btn main" id="addquestion">+</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+<footer>MISSedSIGNALS / CASEWORK SYSTEM · BUILT FOR THE UNREAD PROBLEM</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const mystery = [
+"09:00 Maya: We will present our project on Friday.",
+"09:05 Arjun: Can someone prepare the presentation slides?",
+"09:10 Maya: We need the prototype ready before the presentation.",
+"09:20 Sam: Who is uploading the final report?",
+"09:30 Maya: Update — the presentation has moved to Thursday.",
+"09:35 Arjun: I can prepare the slides by Wednesday.",
+"09:40 Maya: We decided to use JavaScript for the demo.",
+"09:45 Sam: Has anyone finished the prototype?",
+"09:50 Maya: @team please confirm who owns the final upload."
+].join("\n");
+
+let findings = [];
+let tasks = [];
+let events = [];
+
+function parseLine(raw,index){
+  const m=raw.match(/^\s*(?:(\d{1,2}:\d{2})\s+)?([^:\n]{1,40}):\s*(.+)$/);
+  return {
+    time:m && m[1] ? m[1] : String(index+1).padStart(2,"0"),
+    sender:m ? m[2].trim() : "Message "+(index+1),
+    text:m ? m[3].trim() : raw.trim(),
+    index
+  };
+}
+function addFinding(type,title,detail,evidence,index,weight){
+  findings.push({type,title,detail,evidence,index,weight});
+}
+function investigate(){
+  const lines=$("chat").value.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  findings=[];tasks=[];events=[];
+  const messages=lines.map(parseLine);
+  const all=messages.map(m=>m.text).join(" ");
+  const lower=all.toLowerCase();
+
+  if(!messages.length){
+    $("status").textContent="NO EVIDENCE";
+    $("findings").textContent="Paste some messages before starting.";
+    return;
+  }
+
+  const changeWords=/\b(update|changed|change of plan|instead|actually|moved|postponed|rescheduled|cancelled|canceled|no longer|new plan|correction|rather than)\b/i;
+  const deadlineWords=/\b(deadline|due|by (?:today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)|before (?:today|tomorrow|monday|tuesday|wednesday|thursday|friday)|tonight|eod|end of day)\b/i;
+  const actionWords=/\b(please|need to|needs to|must|prepare|finish|complete|submit|upload|send|create|review|confirm|assign|bring|fix|deliver|don't forget)\b/i;
+  const questionWords=/\b(who|what|when|where|which|how|can someone|anyone|has anyone|does anyone|is anyone)\b/i;
+  const decisionWords=/\b(decided|agreed|confirmed|finalized|finalised|we will use|the plan is|chosen)\b/i;
+  const doneWords=/\b(done|completed|uploaded|submitted|finished|resolved|fixed|sent|ready)\b/i;
+
+  // Detect later messages that appear to revise an earlier plan.
+  messages.forEach((m,i)=>{
+    if(changeWords.test(m.text)){
+      const earlier=messages.slice(0,i).filter(x=>deadlineWords.test(x.text)||/present|meeting|demo|plan|submit/i.test(x.text));
+      addFinding("CHANGE","Possible plot twist",
+        "This message may revise an earlier plan. Compare both messages to confirm what changed.",
+        (earlier.length ? earlier[earlier.length-1].sender+": "+earlier[earlier.length-1].text+" → " : "")+m.sender+": "+m.text,
+        i,5);
+      events.push({...m,kind:"change"});
+    }
+  });
+
+  // Find questions with no obvious later response.
+  messages.forEach((m,i)=>{
+    if(m.text.includes("?") && questionWords.test(m.text)){
+      const subject=m.text.toLowerCase().replace(/[^a-z0-9 ]/g," ").split(/\s+/).filter(w=>w.length>4);
+      const later=messages.slice(i+1);
+      const answered=later.some(n=>
+        n.sender.toLowerCase()!==m.sender.toLowerCase() &&
+        (doneWords.test(n.text)||/^(yes|no|i will|i can|we will|done|it's|it is|the deadline)/i.test(n.text))
+      );
+      if(!answered){
+        addFinding("QUESTION","Possibly unanswered question",
+          "No obvious response was detected in the remaining pasted messages. Check the full chat before following up.",
+          m.sender+": "+m.text,i,3);
+      }
+    }
+  });
+
+  // Find requests and tasks with no clear owner.
+  messages.forEach((m,i)=>{
+    if(actionWords.test(m.text) && !/\b(i will|i can|i'll|i am|we will|assigned to|i have)\b/i.test(m.text)){
+      const later=messages.slice(i+1);
+      const subject=m.text.toLowerCase().replace(/[^a-z0-9 ]/g," ").split(/\s+/).filter(w=>w.length>4);
+      const response=later.find(n=>
+        n.sender.toLowerCase()!==m.sender.toLowerCase() &&
+        /\b(i will|i can|i'll|i am|we will|i have|done|finished|completed|uploaded|sent)\b/i.test(n.text) &&
+        subject.some(w=>n.text.toLowerCase().includes(w))
+      );
+      if(!response){
+        addFinding("GAP","Task may lack a clear owner",
+          "No matching ownership or completion message was found in the pasted text. This does not prove nobody owns it.",
+          m.sender+": "+m.text,i,4);
+        tasks.push({text:"Confirm ownership: "+m.text,source:m.sender+" · message "+(i+1)});
+      }
+    }
+  });
+
+  // Surface decisions as useful reference points.
+  messages.forEach((m,i)=>{
+    if(decisionWords.test(m.text)){
+      addFinding("DECISION","Decision recorded",
+        "Potentially important agreement. Verify whether a later message supersedes it.",
+        m.sender+": "+m.text,i,2);
+    }
+  });
+
+  // Find deadline statements with no obvious completed-status message.
+  messages.forEach((m,i)=>{
+    if(deadlineWords.test(m.text)){
+      const later=messages.slice(i+1);
+      if(!later.some(n=>doneWords.test(n.text))){
+        addFinding("GAP","Deadline needs a status check",
+          "No clear completion message was detected after this deadline-related message.",
+          m.sender+": "+m.text,i,4);
+        tasks.push({text:"Check status of deadline: "+m.text,source:m.sender+" · message "+(i+1)});
+      }
+    }
+  });
+
+  // Detect mentions / direct requests.
+  messages.forEach((m,i)=>{
+    if(/@you\b|@team\b|\byou need to\b|\bcan you\b|\bcould you\b/i.test(m.text)){
+      addFinding("TASK","Direct request or mention",
+        "Review this message to see whether it requires your attention.",
+        m.sender+": "+m.text,i,3);
+      tasks.push({text:"Review request: "+m.text,source:m.sender+" · message "+(i+1)});
+    }
+  });
+
+  // Chronological timeline contains notable messages only.
+  messages.forEach(m=>{
+    if(changeWords.test(m.text)||deadlineWords.test(m.text)||decisionWords.test(m.text)||
+      actionWords.test(m.text)||m.text.includes("?")){
+      if(!events.some(e=>e.index===m.index))events.push({...m,kind:"normal"});
+    }
+  });
+  events.sort((a,b)=>a.index-b.index);
+
+  // Generate follow-up for each question / task, avoiding duplicate tasks.
+  if(!findings.length){
+    addFinding("INFO","No strong signals detected",
+      "Try a longer conversation with decisions, questions, requests or deadlines.",
+      "No matching patterns found.",0,1);
+  }
+
+  findings.sort((a,b)=>b.weight-a.weight||a.index-b.index);
+  const score=Math.min(100,findings.reduce((s,f)=>s+f.weight*5,0));
+  $("score").textContent=score;
+  $("bar").style.width=score+"%";
+  $("scoretext").textContent=score>=65
+    ?"Several follow-ups may be needed. Verify high-priority findings."
+    :score>=30?"Some potential gaps or changes were found. Review the evidence."
+    :"Few signals were detected. Check whether the pasted conversation is complete.";
+  $("status").textContent="EVIDENCE ANALYZED";
+  $("caseid").textContent="CASE / MS-"+String(Date.now()).slice(-6);
+  renderFindings();
+  renderTimeline();
+  renderTasks();
+  renderTwist();
+}
+
+function renderFindings(){
+  const root=$("findings");root.replaceChildren();
+  $("findingcount").textContent=findings.length+" FINDINGS";
+  findings.forEach(f=>{
+    const item=document.createElement("article");item.className="finding";
+    const top=document.createElement("div");top.className="findtop";
+    const tag=document.createElement("span");tag.className="tag "+f.type;tag.textContent=f.type;
+    const number=document.createElement("span");number.className="num";
+    number.textContent="MSG "+String(f.index+1).padStart(2,"0");
+    top.append(tag,number);
+    const h=document.createElement("h3");h.textContent=f.title;
+    const p=document.createElement("p");p.textContent=f.detail;
+    const ev=document.createElement("div");ev.className="evidence";
+    const b=document.createElement("b");b.textContent="SOURCE / ";
+    ev.append(b,document.createTextNode(f.evidence));
+    item.append(top,h,p,ev);root.append(item);
+  });
+}
+function renderTimeline(){
+  const root=$("timeline");root.replaceChildren();
+  $("eventcount").textContent=events.length+" EVENTS";
+  if(!events.length){root.textContent="No notable events found.";return}
+  const wrap=document.createElement("div");wrap.className="timeline";
+  events.forEach(e=>{
+    const item=document.createElement("div");item.className="event "+(e.kind==="change"?"change":"");
+    const time=document.createElement("time");time.textContent=e.time;
+    const p=document.createElement("p");p.textContent=e.text;
+    const small=document.createElement("small");small.textContent="SOURCE: "+e.sender;
+    item.append(time,p,small);wrap.append(item);
+  });
+  root.append(wrap);
+}
+function renderTwist(){
+  const root=$("twist");root.replaceChildren();
+  const changes=findings.filter(f=>f.type==="CHANGE");
+  if(!changes.length){
+    root.textContent="No explicit plan changes detected. The tool cannot infer a change unless the messages make it visible.";
+    return;
+  }
+  changes.forEach(f=>{
+    const d=document.createElement("div");d.className="finding";
+    const h=document.createElement("h3");h.textContent=f.title;
+    const p=document.createElement("p");p.textContent=f.evidence;
+    const q=document.createElement("p");q.textContent="Next move: confirm which version of the plan is final.";
+    d.append(h,p,q);root.append(d);
+  });
+}
+function renderTasks(){
+  const root=$("todos");root.replaceChildren();
+  const unique=[...new Map(tasks.map(t=>[t.text,t])).values()].slice(0,12);
+  if(!unique.length){
+    root.textContent="No follow-up tasks detected. Add your own task or inspect the evidence board.";
+    return;
+  }
+  unique.forEach(t=>{
+    const row=document.createElement("div");row.className="todo";
+    const check=document.createElement("input");check.type="checkbox";
+    const label=document.createElement("label");label.textContent=t.text;
+    const small=document.createElement("small");small.textContent=t.source;
+    label.append(small);row.append(check,label);root.append(row);
+  });
+}
+$("investigate").addEventListener("click",investigate);
+$("load").addEventListener("click",()=>{$("chat").value=mystery;investigate()});
+$("reset").addEventListener("click",()=>{
+  $("chat").value="";findings=[];tasks=[];events=[];
+  $("status").textContent="AWAITING EVIDENCE";
+  $("score").textContent="—";$("bar").style.width="0%";
+  $("scoretext").textContent="Investigate a conversation to estimate how much follow-up may be needed.";
+  $("findings").textContent="Your findings will appear here, with the source message attached.";
+  $("timeline").textContent="The conversation will be reconstructed in message order.";
+  $("twist").textContent="Waiting for evidence of a changed plan.";
+  $("todos").textContent="Your next steps will appear here.";
+  $("findingcount").textContent="0 FINDINGS";$("eventcount").textContent="0 EVENTS";
+  $("copymsg").textContent="";
+});
+$("copy").addEventListener("click",()=>{
+  const checked=[...$("todos").querySelectorAll(".todo")].filter(r=>!r.querySelector("input").checked)
+    .map(r=>r.querySelector("label").childNodes[0].textContent.trim());
+  const text="MISSEDSIGNALS — COMEBACK PLAN\n\n"+(checked.length?checked.join("\n"):"No outstanding tasks detected.");
+  const fallback=()=>{
+    const area=document.createElement("textarea");area.value=text;
+    document.body.append(area);area.select();
+    try{document.execCommand("copy");$("copymsg").textContent="Plan copied."}
+    catch(e){$("copymsg").textContent=text}
+    area.remove();
+  };
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(text).then(()=>$("copymsg").textContent="Plan copied.")
+      .catch(fallback);
+  }else fallback();
+});
+document.querySelectorAll("[data-prompt]").forEach(b=>{
+  b.addEventListener("click",()=>{$("question").value=b.dataset.prompt;$("question").focus()});
+});
+$("addquestion").addEventListener("click",()=>{
+  const q=$("question").value.trim();if(!q)return;
+  tasks.unshift({text:"Ask the group: "+q,source:"Your follow-up"});
+  renderTasks();$("question").value="";
+});
+$("question").addEventListener("keydown",e=>{if(e.key==="Enter")$("addquestion").click()});
+
+// Load a complete interactive case on first visit.
+$("chat").value=mystery;
+investigate();
+</script>
+</body>
+</html>
